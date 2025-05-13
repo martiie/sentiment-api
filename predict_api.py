@@ -12,7 +12,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-pipeline = joblib.load("model/sentiment_model.pkl")
+pipeline = joblib.load("model/sentiment_model_3class.pkll")
 
 class Review(BaseModel):
     text: str
@@ -20,5 +20,10 @@ class Review(BaseModel):
 @app.post("/predict")
 def predict_sentiment(review: Review):
     pred = pipeline.predict([review.text])[0]
-    label = "positive" if pred == 1 else "negative"
+    if pred == 0:
+      label = "negative"  
+    elif pred ==1:
+      label= "neutral"
+    else:
+      label="positive"
     return {"sentiment": label}
