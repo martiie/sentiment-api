@@ -21,9 +21,9 @@ class Review(BaseModel):
 def predict_sentiment(review: Review):
     pred = pipeline.predict([review.text])[0]
     if pred == 0:
-      label = "negative"  
+      label = "positive"  
     elif pred ==1:
       label= "neutral"
     else:
-      label="positive"
+      label="negative"
     return {"sentiment": label}
