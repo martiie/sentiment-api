@@ -12,7 +12,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-pipeline = joblib.load("model/sentiment_model_3class.pkll")
+pipeline = joblib.load("model/sentiment_model_3class.pkl")
 
 class Review(BaseModel):
     text: str
