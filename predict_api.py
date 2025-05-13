@@ -19,6 +19,6 @@ class Review(BaseModel):
 
 @app.post("/predict")
 def predict_sentiment(review: Review):
-    pred = pipeline.predict([review])[0]
+    pred = pipeline.predict([review.text])[0]
     label = "positive" if pred == 1 else "negative"
     return {"sentiment": label}
