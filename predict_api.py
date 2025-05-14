@@ -78,7 +78,18 @@ def get_exchange_rates(
     conn.close()
 
     return results
+        
+@router.get("/exchange_rates/all")
+def get_all_exchange_rates():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT period, rate FROM exchange_rates ORDER BY period")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
 
+    return [[row[0].isoformat(), row[1]] for row in rows]
+    
 @app.get("/available_periods/")
 def get_available_periods():
     conn = get_connection()
