@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
+from typing import Optional
+from db import get_connection
 
 app = FastAPI()
 app.add_middleware(
@@ -27,3 +29,49 @@ def predict_sentiment(review: Review):
     else:
       label="positive"
     return {"sentiment": label}
+
+@app.get("/exchange_rates/")
+def get_exchange_rates(
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),):
+
+    
+    conn = get_connection()
+    cur = conn.cursor()
+
+    base_query = "SELECT * FROM exchange_rates"
+    conditions = []
+    params = []
+
+    # Filter ตามปี
+    if year:
+        conditions.append("EXTRACT(YEAR FROM period) = %s")
+        params.append(year)
+
+    # Filter ตามเดือน (ต้องกรอกปีด้วย)
+    if month and year:
+        conditions.append("EXTRACT(MONTH FROM period) = %s")
+        params.append(month)
+
+    # Filter ตามช่วงวันที่
+    if start_date:
+        conditions.append("period >= %s")
+        params.append(start_date)
+    if end_date:
+        conditions.append("period <= %s")
+        params.append(end_date)
+
+    if conditions:
+        base_query += " WHERE " + " AND ".join(conditions)
+
+    base_query += " ORDER BY period"
+
+    cur.execute(base_query, params)
+    results = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return results
