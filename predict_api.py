@@ -91,7 +91,7 @@ def get_available_periods():
     # ประมวลผลเป็นโครงสร้าง {year: [month1, month2, ...]}
     periods = defaultdict(set)
     for (period,) in rows:
-        dt = datetime.strptime(period, "%Y-%m-%d")
+        dt = period  # ถ้า period เป็น datetime.date อยู่แล้ว ไม่ต้องแปลง
         periods[dt.year].add(dt.month)
 
     return {year: sorted(list(months)) for year, months in periods.items()}
