@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import joblib
 from typing import Optional
 from db import get_connection
+from load_data_exchange import refresh_data
 
 app = FastAPI()
 app.add_middleware(
@@ -37,7 +38,7 @@ def get_exchange_rates(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),):
 
-    
+    refresh_data()
     conn = get_connection()
     cur = conn.cursor()
 
