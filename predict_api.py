@@ -79,7 +79,7 @@ def get_exchange_rates(
 
     return results
         
-@router.get("/exchange_rates/all")
+@app.get("/exchange_rates/all")
 def get_all_exchange_rates():
     conn = get_connection()
     cur = conn.cursor()
