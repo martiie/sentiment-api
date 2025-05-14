@@ -5,6 +5,8 @@ import joblib
 from typing import Optional
 from db import get_connection
 from load_data_exchange import refresh_data
+from datetime import datetime
+from collections import defaultdict
 
 app = FastAPI()
 app.add_middleware(
@@ -76,3 +78,20 @@ def get_exchange_rates(
     conn.close()
 
     return results
+
+@app.get("/available_periods/")
+def get_available_periods():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT period FROM exchange_rates")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # ประมวลผลเป็นโครงสร้าง {year: [month1, month2, ...]}
+    periods = defaultdict(set)
+    for (period,) in rows:
+        dt = datetime.strptime(period, "%Y-%m-%d")
+        periods[dt.year].add(dt.month)
+
+    return {year: sorted(list(months)) for year, months in periods.items()}
