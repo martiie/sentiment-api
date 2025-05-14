@@ -2,7 +2,7 @@ import http.client
 import json
 from db import get_connection
 def refresh_data():
-  try
+  try:
     conn = http.client.HTTPSConnection("apigw1.bot.or.th")
     
     headers = {
