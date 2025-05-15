@@ -33,6 +33,43 @@ def predict_sentiment(review: Review):
       label="positive"
     return {"sentiment": label}
 
+
+modelGML = joblib.load("model/GLM.pkl")
+
+# Request schema
+class PredictionInput(BaseModel):
+    alb: float
+    treat_embolize: int
+    treat_surgery: int
+    hct: float
+    locbleed_left_lobe: int
+    shock_No_shock: int
+    loctumor_left_lobe: int
+    sen: int
+    sex_male: int
+    sex_female: int
+    hvivcinvade: int
+    hepencep: int
+    shock_Shock: int
+    locbleed_right_lobe: int
+    active: int
+    pvinvade: int
+    ascites: int
+    treat_conservative: int
+    inr: float
+    tb: float
+    child: int
+    bclcstage: int
+
+@app.post("/predict")
+def predict_survival(data: PredictionInput):
+    try:
+        input_df = pd.DataFrame([data.dict()])
+        prediction = modelGML.predict(input_df)
+        return {"predicted_days": float(prediction[0])}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/exchange_rates/")
 def get_exchange_rates(
     year: Optional[int] = Query(None),
