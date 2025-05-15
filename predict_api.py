@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
@@ -8,6 +8,8 @@ from load_data_exchange import refresh_data
 from datetime import datetime
 from collections import defaultdict
 import pandas as pd
+import google.generativeai as genai
+
 
 app = FastAPI()
 app.add_middleware(
@@ -144,3 +146,32 @@ def get_available_periods():
         periods[dt.year].add(dt.month)
 
     return {year: sorted(list(months)) for year, months in periods.items()}
+
+#--------------------------------------------------------------------------------------------------------
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyCudfoHN4vVQfH9TVlLc4d1n97nRuZ29cs")
+genai.configure(api_key=GOOGLE_API_KEY)
+
+# ✅ สร้าง model
+model = genai.GenerativeModel("gemini-2.0-flash")
+
+class Message(BaseModel):
+    text: str
+
+# ✅ ฟังก์ชันคุยกับ Gemini โดยจำกัดหัวข้อ
+def chat_with_gemini(message: str):
+    prompt = (
+        "คุณคือผู้ช่วยเฉพาะทางด้านโรคติดต่อทางเพศสัมพันธ์หรือ HIV เท่านั้น "
+        "ห้ามตอบคำถามนอกเหนือจากเรื่องโรคติดต่อทางเพศสัมพันธ์หรือ HIV\n"
+        f"คำถามจากผู้ใช้: {message}"
+    )
+    response = model.generate_content(prompt)
+    return {"response": response.text}
+
+# ✅ สร้าง endpoint POST สำหรับ chatbot
+@app.post("/chat")
+def chat(message: Message):
+    try:
+        result = chat_with_gemini(message.text)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
