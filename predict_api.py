@@ -9,6 +9,7 @@ from datetime import datetime
 from collections import defaultdict
 import pandas as pd
 import google.generativeai as genai
+import os
 
 
 app = FastAPI()
