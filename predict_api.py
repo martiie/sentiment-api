@@ -7,6 +7,7 @@ from db import get_connection
 from load_data_exchange import refresh_data
 from datetime import datetime
 from collections import defaultdict
+import pandas as pd
 
 app = FastAPI()
 app.add_middleware(
