@@ -61,7 +61,7 @@ class PredictionInput(BaseModel):
     child: int
     bclcstage: int
 
-@app.post("/predict")
+@app.post("/predict_survival")
 def predict_survival(data: PredictionInput):
     try:
         input_df = pd.DataFrame([data.dict()])
