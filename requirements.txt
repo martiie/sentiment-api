@@ -5,3 +5,7 @@ scikit-learn
 joblib
 psycopg2-binary
 google-generativeai
+ultralytics
+opencv-python
+python-multipart
+Pillow
