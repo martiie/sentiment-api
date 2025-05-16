@@ -1,6 +1,5 @@
-from fastapi import FastAPI, Query, HTTPException, File, UploadFile
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import joblib
 from typing import Optional
@@ -11,10 +10,6 @@ from collections import defaultdict
 import pandas as pd
 import google.generativeai as genai
 import os
-from ultralytics import YOLO
-import cv2
-import numpy as np
-import io
 
 
 app = FastAPI()
@@ -183,30 +178,4 @@ def chat(message: Message):
         raise HTTPException(status_code=500, detail=str(e))
 
 #------------------------------------------------------------------------------------------------------------
-model = YOLO("model/best.pt")
-class_names = ["Fresh Tomato", "Rotten Tomato"]
 
-@app.post("/predict/")
-async def predict_image(file: UploadFile = File(...)):
-    # อ่านภาพจากไฟล์ที่อัปโหลด
-    image_data = await file.read()
-    image_array = np.frombuffer(image_data, np.uint8)
-    img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-
-    # ทำนาย
-    results = model.predict(source=img, conf=0.5, save=False)
-    boxes = results[0].boxes
-    classes = boxes.cls.tolist()
-    confidences = boxes.conf.tolist()
-
-    # วาดกรอบและ label
-    for box, cls_id, conf in zip(boxes.xyxy, classes, confidences):
-        x1, y1, x2, y2 = [int(c) for c in box]
-        label = f"{class_names[int(cls_id)]} {conf:.2f}"
-        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6, (0, 255, 0), 2)
-
-    # แปลงเป็น JPEG เพื่อส่งกลับ
-    _, img_encoded = cv2.imencode('.jpg', img)
-    return StreamingResponse(io.BytesIO(img_encoded.tobytes()), media_type="image/jpeg")
