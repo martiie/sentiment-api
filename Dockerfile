@@ -1,4 +1,6 @@
 FROM python:3.10-slim
+# ติดตั้ง system dependencies ที่จำเป็นสำหรับ OpenCV
+RUN apt-get update && apt-get install -y libgl1
 
 WORKDIR /app
 COPY . /app
