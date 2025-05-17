@@ -199,7 +199,5 @@ def predict_sentiment(review: Review):
         label = "neutral"
     else:
         label = "positive"
-
-return {"sentiment": label}
     return {"sentiment": label}
 
