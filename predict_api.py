@@ -10,7 +10,7 @@ from collections import defaultdict
 import pandas as pd
 import google.generativeai as genai
 import os
-
+from pythainlp import word_tokenize
 
 app = FastAPI()
 app.add_middleware(
@@ -21,22 +21,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-pipeline = joblib.load("model/sentiment_model_3class.pkl")
-
+#---------------------------------------------------------------------------------------------------------------------------NLP
+lr = joblib.load('model/logistic_model.pkl')
+cvec = joblib.load('model/count_vectorizer.pkl')
 class Review(BaseModel):
     text: str
 
+def text_process(text):
+    final = "".join(u for u in text if u not in ("?", ".", ";", ":", "!", '"', "ๆ", "ฯ"))
+    final = word_tokenize(final)
+    final = " ".join(word for word in final)
+    final = " ".join(word for word in final.split() 
+                     if word.lower not in thai_stopwords)
+    return final
 @app.post("/predict")
 def predict_sentiment(review: Review):
-    pred = pipeline.predict([review.text])[0]
-    if pred == 0:
+    my_tokens = text_process(my_text)
+    my_bow = cvec.transform(pd.Series([my_tokens]))
+    my_predictions = lr.predict(my_bow)
+    if my_predictions == "neg":
       label = "negative"  
-    elif pred ==1:
-      label= "neutral"
     else:
       label="positive"
     return {"sentiment": label}
-
+#---------------------------------------------------------------------------------------------------------------------------------------------Regression
 
 modelGML = joblib.load("model/GLM.pkl")
 
@@ -74,6 +82,7 @@ def predict_survival(data: PredictionInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+#-----------------------------------------------------------------------------------------------------------------ETL exchange
 @app.get("/exchange_rates/")
 def get_exchange_rates(
     year: Optional[int] = Query(None),
@@ -148,7 +157,7 @@ def get_available_periods():
 
     return {year: sorted(list(months)) for year, months in periods.items()}
 
-#--------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------- Chatbot
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyCudfoHN4vVQfH9TVlLc4d1n97nRuZ29cs")
 genai.configure(api_key=GOOGLE_API_KEY)
 
