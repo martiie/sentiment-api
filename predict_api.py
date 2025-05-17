@@ -11,6 +11,7 @@ import pandas as pd
 import google.generativeai as genai
 import os
 from pythainlp import word_tokenize
+from utils import custom_analyzer
 
 app = FastAPI()
 app.add_middleware(
@@ -26,9 +27,6 @@ lr = joblib.load('model/logistic_model.pkl')
 cvec = joblib.load('model/count_vectorizer.pkl')
 class Review(BaseModel):
     text: str
-    
-def custom_analyzer(text):
-    return text.split(' ')
     
 def text_process(text):
     final = "".join(u for u in text if u not in ("?", ".", ";", ":", "!", '"', "ๆ", "ฯ"))
