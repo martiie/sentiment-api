@@ -11,7 +11,6 @@ import pandas as pd
 import google.generativeai as genai
 import os
 from pythainlp import word_tokenize
-from utils import custom_analyzer
 
 app = FastAPI()
 app.add_middleware(
