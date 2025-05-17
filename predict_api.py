@@ -192,6 +192,7 @@ def sentiment_with_gemini(message: str):
 def predict_sentiment(review: Review):
     result = chat_with_gemini(review.text)
     my_predictions = result['response'].replace("\n", "")
+    print(my_predictions)
     if my_predictions == "neg":
       label = "negative"  
     else:
