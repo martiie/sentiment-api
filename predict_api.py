@@ -10,8 +10,8 @@ from collections import defaultdict
 import pandas as pd
 import google.generativeai as genai
 import os
-from pythainlp import word_tokenize
-from pythainlp.corpus.common import thai_stopwords
+# from pythainlp import word_tokenize
+# from pythainlp.corpus.common import thai_stopwords
 
 app = FastAPI()
 app.add_middleware(
@@ -22,31 +22,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-#---------------------------------------------------------------------------------------------------------------------------NLP
-lr = joblib.load('model/logistic_model.pkl')
-cvec = joblib.load('model/count_vectorizer.pkl')
-class Review(BaseModel):
-    text: str
-    
-thai_stopwords = list(thai_stopwords())
-
-def text_process(text):
-    final = "".join(u for u in text if u not in ("?", ".", ";", ":", "!", '"', "ๆ", "ฯ"))
-    final = word_tokenize(final)
-    final = " ".join(word for word in final)
-    final = " ".join(word for word in final.split() 
-                     if word.lower not in thai_stopwords)
-    return final
-@app.post("/predict")
-def predict_sentiment(review: Review):
-    my_tokens = text_process(review.text)
-    my_bow = cvec.transform(pd.Series([my_tokens]))
-    my_predictions = lr.predict(my_bow)
-    if my_predictions == "neg":
-      label = "negative"  
-    else:
-      label="positive"
-    return {"sentiment": label}
 #---------------------------------------------------------------------------------------------------------------------------------------------Regression
 
 modelGML = joblib.load("model/GLM.pkl")
@@ -189,5 +164,37 @@ def chat(message: Message):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-#------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------NLP
+# lr = joblib.load('model/logistic_model.pkl')
+# cvec = joblib.load('model/count_vectorizer.pkl')
+class Review(BaseModel):
+    text: str
+    
+# thai_stopwords = list(thai_stopwords())
+
+# def text_process(text):
+#     final = "".join(u for u in text if u not in ("?", ".", ";", ":", "!", '"', "ๆ", "ฯ"))
+#     final = word_tokenize(final)
+#     final = " ".join(word for word in final)
+#     final = " ".join(word for word in final.split() 
+#                      if word.lower not in thai_stopwords)
+#     return final
+def sentiment_with_gemini(message: str):
+    prompt = (
+        "คุณคือผู้ช่วยทำการวิเคราะห์ความเห็นจากผู้ใช้ "
+        "ตอบได้แค่ 'neg' หรือ 'pos' เท่านั้น \n"
+        f"คำถามจากผู้ใช้: {message}"
+    )
+    response = model.generate_content(prompt)
+    return {"response": response.text}
+    
+@app.post("/predict")
+def predict_sentiment(review: Review):
+    result = chat_with_gemini(review.text)
+    my_predictions = result['response'].text.replace("\n", "")
+    if my_predictions == "neg":
+      label = "negative"  
+    else:
+      label="positive"
+    return {"sentiment": label}
 
