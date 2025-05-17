@@ -182,7 +182,7 @@ class Review(BaseModel):
 def sentiment_with_gemini(message: str):
     prompt = (
         "คุณคือผู้ช่วยทำการวิเคราะห์ความเห็นจากผู้ใช้ "
-        "ตอบได้แค่ 'neg' หรือ 'pos' เท่านั้น \n"
+        "ตอบได้แค่ 'neg' หรือ 'neu' หรือ 'pos' เท่านั้น \n"
         f"คำถามจากผู้ใช้: {message}"
     )
     response = model.generate_content(prompt)
@@ -194,8 +194,12 @@ def predict_sentiment(review: Review):
     my_predictions = result['response'].replace("\n", "")
     print(my_predictions)
     if my_predictions == "neg":
-      label = "negative"  
+        label = "negative"
+    elif my_predictions == "neu":
+        label = "neutral"
     else:
-      label="positive"
+        label = "positive"
+
+return {"sentiment": label}
     return {"sentiment": label}
 
