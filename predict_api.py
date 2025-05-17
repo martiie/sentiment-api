@@ -11,6 +11,7 @@ import pandas as pd
 import google.generativeai as genai
 import os
 from pythainlp import word_tokenize
+from pythainlp.corpus.common import thai_stopwords
 
 app = FastAPI()
 app.add_middleware(
@@ -27,6 +28,8 @@ cvec = joblib.load('model/count_vectorizer.pkl')
 class Review(BaseModel):
     text: str
     
+thai_stopwords = list(thai_stopwords())
+
 def text_process(text):
     final = "".join(u for u in text if u not in ("?", ".", ";", ":", "!", '"', "ๆ", "ฯ"))
     final = word_tokenize(final)
