@@ -36,7 +36,7 @@ def text_process(text):
     return final
 @app.post("/predict")
 def predict_sentiment(review: Review):
-    my_tokens = text_process(my_text)
+    my_tokens = text_process(review.text)
     my_bow = cvec.transform(pd.Series([my_tokens]))
     my_predictions = lr.predict(my_bow)
     if my_predictions == "neg":
