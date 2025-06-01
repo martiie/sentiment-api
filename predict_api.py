@@ -165,39 +165,32 @@ def chat(message: Message):
         raise HTTPException(status_code=500, detail=str(e))
 
 #---------------------------------------------------------------------------------------------------------------------------NLP
-# lr = joblib.load('model/logistic_model.pkl')
-# cvec = joblib.load('model/count_vectorizer.pkl')
+lr = joblib.load('model/logistic_model.pkl')
+cvec = joblib.load('model/count_vectorizer.pkl')
+
+# เตรียม stopwords
+stopwords = list(thai_stopwords())
+
 class Review(BaseModel):
     text: str
-    
-# thai_stopwords = list(thai_stopwords())
 
-# def text_process(text):
-#     final = "".join(u for u in text if u not in ("?", ".", ";", ":", "!", '"', "ๆ", "ฯ"))
-#     final = word_tokenize(final)
-#     final = " ".join(word for word in final)
-#     final = " ".join(word for word in final.split() 
-#                      if word.lower not in thai_stopwords)
-#     return final
-def sentiment_with_gemini(message: str):
-    prompt = (
-        "คุณคือผู้ช่วยทำการวิเคราะห์ความเห็นจากผู้ใช้ "
-        "ตอบได้แค่ 'neg' หรือ 'neu' หรือ 'pos' เท่านั้น \n"
-        f"คำถามจากผู้ใช้: {message}"
-    )
-    response = model.generate_content(prompt)
-    return {"response": response.text}
-    
+def text_process(text):
+    final = "".join(u for u in text if u not in ("?", ".", ";", ":", "!", '"', "ๆ", "ฯ"))
+    final = word_tokenize(final, engine="newmm")
+    final = " ".join(word for word in final if word not in stopwords)
+    return final
+
 @app.post("/predict")
 def predict_sentiment(review: Review):
-    result = sentiment_with_gemini(review.text)
-    my_predictions = result['response'].replace("\n", "")
-    print(my_predictions)
-    if my_predictions == "neg":
+    processed_text = text_process(review.text)
+    vector = cvec.transform([processed_text])
+    prediction = lr.predict(vector)[0]
+    
+    if prediction == "neg":
         label = "negative"
-    elif my_predictions == "neu":
+    elif prediction == "neu":
         label = "neutral"
     else:
         label = "positive"
+        
     return {"sentiment": label}
-
